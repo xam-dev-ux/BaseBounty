@@ -7,6 +7,7 @@ import BountyList from './components/BountyList';
 import CreateBountyForm from './components/CreateBountyForm';
 import UserProfile from './components/UserProfile';
 import BountyDetail from './components/BountyDetail';
+import WelcomeModal, { useWelcomeModal } from './components/WelcomeModal';
 
 type View = 'list' | 'create' | 'profile' | 'detail';
 
@@ -14,6 +15,7 @@ function App() {
   const { account, connectWallet } = useWeb3();
   const [currentView, setCurrentView] = useState<View>('list');
   const [selectedBountyId, setSelectedBountyId] = useState<bigint | null>(null);
+  const { showWelcome, closeWelcome } = useWelcomeModal();
 
   // Initialize Farcaster Mini App SDK
   useEffect(() => {
@@ -96,6 +98,8 @@ function App() {
           },
         }}
       />
+
+      {showWelcome && <WelcomeModal onClose={closeWelcome} />}
 
       {account && (
         <Header
