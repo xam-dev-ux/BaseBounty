@@ -1,0 +1,52 @@
+{
+  "name": "basebounty",
+  "version": "1.0.0",
+  "description": "Decentralized marketplace for micro-tasks on Base L2",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:gas": "REPORT_GAS=true hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network baseSepolia",
+    "deploy:base": "hardhat run scripts/deploy.js --network base",
+    "verify:sepolia": "hardhat run scripts/verify.js --network baseSepolia",
+    "verify:base": "hardhat run scripts/verify.js --network base",
+    "interact": "hardhat run scripts/interact.js",
+    "node": "hardhat node",
+    "clean": "hardhat clean && rm -rf cache artifacts",
+    "frontend:install": "cd frontend && npm install",
+    "frontend:dev": "cd frontend && npm run dev",
+    "frontend:build": "cd frontend && npm run build",
+    "frontend:preview": "cd frontend && npm run preview"
+  },
+  "keywords": [
+    "blockchain",
+    "base",
+    "l2",
+    "bounty",
+    "freelance",
+    "marketplace",
+    "web3",
+    "ethereum",
+    "solidity"
+  ],
+  "author": "BaseBounty Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
+    "@nomicfoundation/hardhat-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@typechain/ethers-v6": "^0.5.0",
+    "@typechain/hardhat": "^9.0.0",
+    "chai": "^4.3.10",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.9.0",
+    "hardhat": "^2.19.2",
+    "hardhat-gas-reporter": "^1.0.9",
+    "solidity-coverage": "^0.8.5",
+    "typechain": "^8.3.0"
+  }
+}

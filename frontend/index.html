@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <title>BaseBounty - Decentralized Micro-Tasks Marketplace</title>
+    <meta name="title" content="BaseBounty - Decentralized Micro-Tasks Marketplace" />
+    <meta name="description" content="Post and complete micro-tasks with secure ETH payments on Base L2. Build your onchain reputation." />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://basebounty.vercel.app/" />
+    <meta property="og:title" content="BaseBounty - Decentralized Micro-Tasks" />
+    <meta property="og:description" content="Post tasks, hire workers, and build reputation onchain. Secure payments with dispute resolution for freelance work on Base L2." />
+    <meta property="og:image" content="https://basebounty.vercel.app/embed.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://basebounty.vercel.app/" />
+    <meta property="twitter:title" content="BaseBounty - Decentralized Micro-Tasks" />
+    <meta property="twitter:description" content="Post tasks, hire workers, and build reputation onchain. Secure payments with dispute resolution for freelance work on Base L2." />
+    <meta property="twitter:image" content="https://basebounty.vercel.app/embed.png" />
+
+    <!-- Farcaster Mini App Meta Tag -->
+    <meta
+      name="fc:miniapp"
+      content='{
+        "version": "next",
+        "imageUrl": "https://basebounty.vercel.app/embed.png",
+        "button": {
+          "title": "Browse Bounties",
+          "action": {
+            "type": "launch_miniapp",
+            "name": "BaseBounty",
+            "url": "https://basebounty.vercel.app",
+            "splashImageUrl": "https://basebounty.vercel.app/splash.png",
+            "splashBackgroundColor": "#10b981"
+          }
+        }
+      }'
+    />
+  </head>
+  <body class="bg-gray-900 text-gray-100">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
