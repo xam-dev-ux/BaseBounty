@@ -103,7 +103,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
 
     try {
       // Request account access
-      const accounts = await window.ethereum.request({
+      await window.ethereum.request({
         method: 'eth_requestAccounts',
       });
 
@@ -149,7 +149,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         setAccount(null);
         setProvider(null);
         setContract(null);
-        toast.info('Wallet disconnected');
+        toast('Wallet disconnected');
       } else if (accounts[0] !== account) {
         connectWallet();
       }

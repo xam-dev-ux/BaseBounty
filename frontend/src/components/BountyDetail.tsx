@@ -21,8 +21,8 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
   const [coverLetter, setCoverLetter] = useState('');
   const [workUrl, setWorkUrl] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
-  const [rating, setRating] = useState(5);
-  const [ratingComment, setRatingComment] = useState('');
+  // const [rating, setRating] = useState(5);
+  // const [ratingComment, setRatingComment] = useState('');
 
   const fetchBountyDetails = async () => {
     if (!contract) return;
@@ -157,24 +157,24 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
     }
   };
 
-  const handleRateUser = async (rateeAddress: string) => {
-    if (!contract) return;
-
-    setIsSubmitting(true);
-    try {
-      const tx = await contract.rateUser(bountyId, rateeAddress, rating, ratingComment);
-      toast.loading('Submitting rating...', { id: 'rate' });
-      await tx.wait();
-      toast.success('Rating submitted!', { id: 'rate' });
-      setRatingComment('');
-      fetchBountyDetails();
-    } catch (error: any) {
-      console.error('Error rating user:', error);
-      toast.error(error.reason || 'Failed to submit rating', { id: 'rate' });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  // Rating functionality - to be implemented in future version
+  // const handleRateUser = async (rateeAddress: string) => {
+  //   if (!contract) return;
+  //   setIsSubmitting(true);
+  //   try {
+  //     const tx = await contract.rateUser(bountyId, rateeAddress, rating, ratingComment);
+  //     toast.loading('Submitting rating...', { id: 'rate' });
+  //     await tx.wait();
+  //     toast.success('Rating submitted!', { id: 'rate' });
+  //     setRatingComment('');
+  //     fetchBountyDetails();
+  //   } catch (error: any) {
+  //     console.error('Error rating user:', error);
+  //     toast.error(error.reason || 'Failed to submit rating', { id: 'rate' });
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   const isCreator = account && bounty && account.toLowerCase() === bounty.creator.toLowerCase();
   const hasApplied = account && applications.has(account);
