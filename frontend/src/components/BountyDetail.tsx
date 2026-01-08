@@ -47,11 +47,11 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
 
       setApplicants(applicantAddresses);
 
-      // Fetch all applications
+      // Fetch all applications (normalize addresses to lowercase)
       const appsMap = new Map<string, Application>();
       for (const addr of applicantAddresses) {
         const app = await contract.getApplication(bountyId, addr);
-        appsMap.set(addr, {
+        appsMap.set(addr.toLowerCase(), {
           worker: app.worker,
           coverLetter: app.coverLetter,
           appliedAt: app.appliedAt,
@@ -177,8 +177,25 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
   // };
 
   const isCreator = account && bounty && account.toLowerCase() === bounty.creator.toLowerCase();
-  const hasApplied = account && applications.has(account);
-  const myApplication = account ? applications.get(account) : null;
+  const hasApplied = account && applications.has(account.toLowerCase());
+  const myApplication = account ? applications.get(account.toLowerCase()) : null;
+
+  // Debug info - temporary
+  useEffect(() => {
+    if (bounty && account) {
+      console.log('🔍 BountyDetail Debug:', {
+        bountyId: bountyId.toString(),
+        bountyStatus: bounty.status,
+        bountyStatusLabel: StatusLabels[bounty.status],
+        isCreator,
+        hasApplied,
+        myAccount: account,
+        creator: bounty.creator,
+        applicantsCount: applicants.length,
+        canApply: !isCreator && bounty.status === BountyStatus.Active && !hasApplied
+      });
+    }
+  }, [bounty, account, isCreator, hasApplied, applicants.length]);
 
   if (loading || !bounty) {
     return (
@@ -252,20 +269,54 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
         </div>
       </div>
 
-      {/* Worker Actions */}
+      {/* Worker Actions - Apply to Bounty */}
       {!isCreator && bounty.status === BountyStatus.Active && !hasApplied && (
-        <div className="card">
-          <h3 className="text-xl font-bold text-white mb-4">Apply to this Bounty</h3>
+        <div className="card bg-primary-900/20 border-2 border-primary-600">
+          <div className="flex items-center gap-2 mb-4">
+            <svg className="w-6 h-6 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h3 className="text-xl font-bold text-white">Apply to this Bounty</h3>
+          </div>
+          <p className="text-gray-400 mb-4">
+            Explain why you're the best person for this task. Include relevant experience and how you plan to complete it.
+          </p>
           <textarea
             value={coverLetter}
             onChange={(e) => setCoverLetter(e.target.value)}
-            placeholder="Write why you're the best fit for this task..."
-            rows={4}
+            placeholder="Write your application here... (e.g., 'I have 5 years of experience in...')"
+            rows={5}
             className="textarea mb-4"
           />
-          <button onClick={handleApply} disabled={isSubmitting} className="btn-primary">
-            {isSubmitting ? 'Applying...' : 'Submit Application'}
+          <button onClick={handleApply} disabled={isSubmitting || !coverLetter.trim()} className="btn-primary w-full text-lg py-3">
+            {isSubmitting ? 'Submitting Application...' : 'Submit Application'}
           </button>
+        </div>
+      )}
+
+      {/* Info message when user can't apply */}
+      {!isCreator && bounty.status === BountyStatus.Active && hasApplied && !myApplication && (
+        <div className="card bg-blue-900/20 border border-blue-700">
+          <p className="text-blue-400">You have already applied to this bounty. Your application is being reviewed.</p>
+        </div>
+      )}
+
+      {!isCreator && bounty.status !== BountyStatus.Active && (
+        <div className="card bg-gray-700/50 border border-gray-600">
+          <p className="text-gray-400">
+            This bounty is {StatusLabels[bounty.status].toLowerCase()} and no longer accepting applications.
+          </p>
+        </div>
+      )}
+
+      {isCreator && bounty.status === BountyStatus.Active && (
+        <div className="card bg-gray-700/50 border border-gray-600">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <p className="text-gray-400">You are the creator of this bounty. Review applications below.</p>
+          </div>
         </div>
       )}
 
@@ -322,7 +373,7 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
           <h3 className="text-xl font-bold text-white mb-4">Applications ({applicants.length})</h3>
           <div className="space-y-4">
             {applicants.map((addr) => {
-              const app = applications.get(addr);
+              const app = applications.get(addr.toLowerCase());
               if (!app) return null;
 
               return (
