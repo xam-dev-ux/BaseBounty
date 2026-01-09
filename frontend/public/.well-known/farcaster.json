@@ -11,8 +11,7 @@
     "iconUrl": "https://base-bounty.vercel.app/logo.png",
     "splashImageUrl": "https://base-bounty.vercel.app/splash.png",
     "splashBackgroundColor": "#10b981",
-    "webhookUrl": "",
-    "subtitle": "Post tasks and earn with secure payments on Base",
+    "subtitle": "Post tasks and earn on Base",
     "description": "Post tasks, hire workers, and build reputation onchain. Secure payments with dispute resolution for freelance work on Base L2.",
     "screenshotUrls": [
       "https://base-bounty.vercel.app/screenshots/1.png",
@@ -23,7 +22,7 @@
     "tags": ["freelance", "tasks", "gigs", "marketplace", "work"],
     "heroImageUrl": "https://base-bounty.vercel.app/hero.png",
     "tagline": "Work, earn, build reputation",
-    "ogTitle": "BaseBounty - Decentralized Micro-Tasks",
+    "ogTitle": "BaseBounty - Tasks on Base",
     "ogDescription": "Post and complete micro-tasks with secure ETH payments on Base L2",
     "ogImageUrl": "https://base-bounty.vercel.app/embed.png",
     "noindex": false
