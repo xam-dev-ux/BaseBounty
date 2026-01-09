@@ -13,7 +13,7 @@ interface Web3ContextType {
   contract: Contract | null;
   isConnecting: boolean;
   isCorrectNetwork: boolean;
-  connectWallet: () => Promise<void>;
+  connectWallet: (silent?: boolean) => Promise<void>;
   switchToBase: () => Promise<void>;
 }
 
@@ -37,6 +37,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
   const [contract, setContract] = useState<Contract | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isCorrectNetwork, setIsCorrectNetwork] = useState(false);
+  const [hasAutoConnected, setHasAutoConnected] = useState(false);
 
   const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
 
@@ -93,11 +94,16 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     }
   };
 
-  const connectWallet = async () => {
+  const connectWallet = async (silent: boolean = false) => {
     if (!window.ethereum) {
-      toast.error('Please install MetaMask or another Web3 wallet');
+      if (!silent) {
+        toast.error('Please install MetaMask or another Web3 wallet');
+      }
       return;
     }
+
+    // Prevent multiple simultaneous connections
+    if (isConnecting) return;
 
     setIsConnecting(true);
 
@@ -116,7 +122,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
 
       // Check network
       const correctNetwork = await checkNetwork(browserProvider);
-      if (!correctNetwork) {
+      if (!correctNetwork && !silent) {
         toast.error('Please switch to Base network');
         await switchToBase();
       }
@@ -131,10 +137,15 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         setContract(contractInstance);
       }
 
-      toast.success('Wallet connected successfully');
+      // Only show toast for manual connections, not auto-connect
+      if (!silent) {
+        toast.success('Wallet connected successfully');
+      }
     } catch (error) {
       console.error('Error connecting wallet:', error);
-      toast.error('Failed to connect wallet');
+      if (!silent) {
+        toast.error('Failed to connect wallet');
+      }
     } finally {
       setIsConnecting(false);
     }
@@ -150,8 +161,14 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         setProvider(null);
         setContract(null);
         toast('Wallet disconnected');
-      } else if (accounts[0] !== account) {
-        connectWallet();
+      } else {
+        const newAccount = accounts[0].toLowerCase();
+        const currentAccount = account?.toLowerCase();
+
+        // Only reconnect if the account actually changed
+        if (newAccount !== currentAccount) {
+          connectWallet(true); // Silent reconnect
+        }
       }
     };
 
@@ -168,10 +185,10 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     };
   }, [account]);
 
-  // Auto-connect if previously connected
+  // Auto-connect if previously connected (only once)
   useEffect(() => {
     const autoConnect = async () => {
-      if (!window.ethereum) return;
+      if (!window.ethereum || hasAutoConnected) return;
 
       try {
         const accounts = await window.ethereum.request({
@@ -179,7 +196,8 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
         });
 
         if (accounts.length > 0) {
-          connectWallet();
+          setHasAutoConnected(true);
+          await connectWallet(true); // Silent auto-connect
         }
       } catch (error) {
         console.error('Error auto-connecting:', error);
@@ -187,7 +205,7 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
     };
 
     autoConnect();
-  }, []);
+  }, [hasAutoConnected]);
 
   const value = {
     account,
