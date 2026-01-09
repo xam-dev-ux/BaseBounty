@@ -19,7 +19,9 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
 
   // Form states
   const [coverLetter, setCoverLetter] = useState('');
+  const [portfolioUrls, setPortfolioUrls] = useState('');
   const [workUrl, setWorkUrl] = useState('');
+  const [workFiles, setWorkFiles] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   // const [rating, setRating] = useState(5);
   // const [ratingComment, setRatingComment] = useState('');
@@ -84,11 +86,18 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
 
     setIsSubmitting(true);
     try {
-      const tx = await contract.applyToBounty(bountyId, coverLetter);
+      // Combine cover letter with portfolio URLs in a structured format
+      let fullApplication = coverLetter;
+      if (portfolioUrls.trim()) {
+        fullApplication += '\n\n---\n📎 Portfolio & Evidence:\n' + portfolioUrls;
+      }
+
+      const tx = await contract.applyToBounty(bountyId, fullApplication);
       toast.loading('Applying to bounty...', { id: 'apply' });
       await tx.wait();
       toast.success('Application submitted!', { id: 'apply' });
       setCoverLetter('');
+      setPortfolioUrls('');
       fetchBountyDetails();
     } catch (error: any) {
       console.error('Error applying:', error);
@@ -106,11 +115,18 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
 
     setIsSubmitting(true);
     try {
-      const tx = await contract.submitWork(bountyId, workUrl);
+      // Combine main work URL with additional files
+      let fullSubmission = workUrl;
+      if (workFiles.trim()) {
+        fullSubmission += '\n\n---\n📁 Additional Files & Evidence:\n' + workFiles;
+      }
+
+      const tx = await contract.submitWork(bountyId, fullSubmission);
       toast.loading('Submitting work...', { id: 'submit-work' });
       await tx.wait();
       toast.success('Work submitted!', { id: 'submit-work' });
       setWorkUrl('');
+      setWorkFiles('');
       fetchBountyDetails();
     } catch (error: any) {
       console.error('Error submitting work:', error);
@@ -299,17 +315,52 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
             </svg>
             <h3 className="text-xl font-bold text-white">Apply to this Bounty</h3>
           </div>
-          <p className="text-gray-400 mb-4">
-            Explain why you're the best person for this task. Include relevant experience and how you plan to complete it.
-          </p>
-          <textarea
-            value={coverLetter}
-            onChange={(e) => setCoverLetter(e.target.value)}
-            placeholder="Write your application here... (e.g., 'I have 5 years of experience in...')"
-            rows={5}
-            className="textarea mb-4"
-          />
-          <button onClick={handleApply} disabled={isSubmitting || !coverLetter.trim()} className="btn-primary w-full text-lg py-3">
+
+          <div className="space-y-4">
+            {/* Cover Letter */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
+                Cover Letter *
+              </label>
+              <p className="text-xs text-gray-400 mb-2">
+                Explain why you're the best person for this task. Include relevant experience and how you plan to complete it.
+              </p>
+              <textarea
+                value={coverLetter}
+                onChange={(e) => setCoverLetter(e.target.value)}
+                placeholder="Example: 'I have 5 years of experience in graphic design, specializing in logo creation. I've completed similar projects for tech startups and can deliver high-quality work within your deadline...'"
+                rows={5}
+                className="textarea"
+                required
+              />
+            </div>
+
+            {/* Portfolio & Evidence */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-300 mb-2">
+                📎 Portfolio & Evidence (Optional)
+              </label>
+              <p className="text-xs text-gray-400 mb-2">
+                Add links to your portfolio, previous work, GitHub, Behance, Dribbble, etc. One URL per line.
+              </p>
+              <textarea
+                value={portfolioUrls}
+                onChange={(e) => setPortfolioUrls(e.target.value)}
+                placeholder="https://github.com/yourusername&#10;https://dribbble.com/yourportfolio&#10;https://ipfs.io/ipfs/Qm...&#10;https://your-portfolio.com"
+                rows={4}
+                className="textarea font-mono text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Tip: Upload files to IPFS, Google Drive, Dropbox, or GitHub and paste the links here
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleApply}
+            disabled={isSubmitting || !coverLetter.trim()}
+            className="btn-primary w-full text-lg py-3 mt-6"
+          >
             {isSubmitting ? 'Submitting Application...' : 'Submit Application'}
           </button>
         </div>
@@ -352,31 +403,136 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
       {!isCreator && hasApplied && myApplication && (
         <div className="card">
           <h3 className="text-xl font-bold text-white mb-4">Your Application</h3>
-          <p className="text-gray-400 mb-4">{myApplication.coverLetter}</p>
+          <div className="text-gray-300 mb-4 whitespace-pre-wrap">
+            {myApplication.coverLetter.split('---').map((section, idx) => {
+              if (idx === 0) return <p key={idx}>{section}</p>;
+              // Portfolio section with clickable links
+              const lines = section.split('\n').filter(l => l.trim());
+              return (
+                <div key={idx} className="mt-4 bg-gray-700/30 rounded p-3">
+                  <p className="text-sm font-semibold text-gray-400 mb-2">{lines[0]}</p>
+                  <div className="space-y-1">
+                    {lines.slice(1).map((line, i) => {
+                      const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
+                      if (urlMatch) {
+                        return (
+                          <a
+                            key={i}
+                            href={urlMatch[1]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block text-sm text-primary-400 hover:text-primary-300 hover:underline font-mono"
+                          >
+                            {urlMatch[1]}
+                          </a>
+                        );
+                      }
+                      return <p key={i} className="text-sm text-gray-400">{line}</p>;
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
           <div className="text-sm text-gray-500">
             Applied: {new Date(Number(myApplication.appliedAt) * 1000).toLocaleString()}
           </div>
 
           {myApplication.workStatus === WorkStatus.NotSubmitted && (
-            <div className="mt-4">
-              <h4 className="font-semibold mb-2">Submit Your Work</h4>
-              <input
-                type="text"
-                value={workUrl}
-                onChange={(e) => setWorkUrl(e.target.value)}
-                placeholder="URL or IPFS hash of your completed work"
-                className="input mb-2"
-              />
-              <button onClick={handleSubmitWork} disabled={isSubmitting} className="btn-primary">
-                {isSubmitting ? 'Submitting...' : 'Submit Work'}
+            <div className="mt-6 bg-gray-700/50 rounded-lg p-4 space-y-4">
+              <h4 className="font-semibold text-white text-lg">📤 Submit Your Completed Work</h4>
+
+              {/* Main Work URL */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  Main Deliverable URL *
+                </label>
+                <p className="text-xs text-gray-400 mb-2">
+                  Link to your completed work (IPFS, Google Drive, Dropbox, GitHub, Figma, etc.)
+                </p>
+                <input
+                  type="url"
+                  value={workUrl}
+                  onChange={(e) => setWorkUrl(e.target.value)}
+                  placeholder="https://ipfs.io/ipfs/Qm... or https://drive.google.com/file/..."
+                  className="input font-mono text-sm"
+                  required
+                />
+              </div>
+
+              {/* Additional Files */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  📁 Additional Files & Evidence (Optional)
+                </label>
+                <p className="text-xs text-gray-400 mb-2">
+                  Extra files, source files, documentation, screenshots, etc. One URL per line.
+                </p>
+                <textarea
+                  value={workFiles}
+                  onChange={(e) => setWorkFiles(e.target.value)}
+                  placeholder="https://github.com/yourrepo/source-files&#10;https://drive.google.com/screenshots&#10;https://ipfs.io/ipfs/Qm...documentation"
+                  rows={3}
+                  className="textarea font-mono text-sm"
+                />
+              </div>
+
+              <button
+                onClick={handleSubmitWork}
+                disabled={isSubmitting || !workUrl.trim()}
+                className="btn-primary w-full"
+              >
+                {isSubmitting ? 'Submitting...' : 'Submit Work for Review'}
               </button>
             </div>
           )}
 
           {myApplication.workStatus === WorkStatus.Submitted && (
             <div className="mt-4 bg-yellow-900/20 border border-yellow-700 rounded-lg p-4">
-              <p className="text-yellow-400">Work submitted, waiting for review</p>
-              <p className="text-sm text-gray-400 mt-1">URL: {myApplication.workSubmissionUrl}</p>
+              <p className="text-yellow-400 font-semibold mb-3">⏳ Work submitted, waiting for review</p>
+              <div className="bg-gray-800/30 rounded p-3 space-y-2">
+                {myApplication.workSubmissionUrl.split('---').map((section, idx) => {
+                  if (idx === 0) {
+                    return (
+                      <div key={idx}>
+                        <p className="text-xs text-gray-500 mb-1">Your Deliverable:</p>
+                        <a
+                          href={section.trim()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary-400 text-sm hover:underline font-mono break-all block"
+                        >
+                          🔗 {section.trim()}
+                        </a>
+                      </div>
+                    );
+                  }
+                  const lines = section.split('\n').filter(l => l.trim());
+                  if (lines.length === 0) return null;
+                  return (
+                    <div key={idx} className="pt-2 border-t border-gray-700">
+                      <p className="text-xs text-gray-500 mb-1">{lines[0]}</p>
+                      {lines.slice(1).map((line, i) => {
+                        const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
+                        if (urlMatch) {
+                          return (
+                            <a
+                              key={i}
+                              href={urlMatch[1]}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block text-xs text-primary-400 hover:text-primary-300 hover:underline font-mono break-all"
+                            >
+                              🔗 {urlMatch[1]}
+                            </a>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -421,20 +577,93 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
                        app.workStatus === WorkStatus.Accepted ? 'Accepted' : 'Rejected'}
                     </span>
                   </div>
-                  <p className="text-gray-400 text-sm mb-2">{app.coverLetter}</p>
+
+                  {/* Application with portfolio links */}
+                  <div className="text-gray-300 text-sm mb-2">
+                    {app.coverLetter.split('---').map((section, idx) => {
+                      if (idx === 0) return <p key={idx} className="text-gray-400">{section}</p>;
+                      // Portfolio section with clickable links
+                      const lines = section.split('\n').filter(l => l.trim());
+                      return (
+                        <div key={idx} className="mt-3 bg-gray-800/50 rounded p-2">
+                          <p className="text-xs font-semibold text-gray-500 mb-1">{lines[0]}</p>
+                          <div className="space-y-1">
+                            {lines.slice(1).map((line, i) => {
+                              const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
+                              if (urlMatch) {
+                                return (
+                                  <a
+                                    key={i}
+                                    href={urlMatch[1]}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="block text-xs text-primary-400 hover:text-primary-300 hover:underline font-mono break-all"
+                                  >
+                                    🔗 {urlMatch[1]}
+                                  </a>
+                                );
+                              }
+                              return <p key={i} className="text-xs text-gray-500">{line}</p>;
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
 
                   {app.workStatus === WorkStatus.Submitted && (
                     <div className="mt-4 space-y-3">
                       <div>
-                        <p className="text-sm font-semibold text-gray-300 mb-1">Submitted Work:</p>
-                        <a
-                          href={app.workSubmissionUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary-400 text-sm hover:underline"
-                        >
-                          {app.workSubmissionUrl}
-                        </a>
+                        <p className="text-sm font-semibold text-gray-300 mb-2">📥 Submitted Work:</p>
+                        {/* Parse work submission for multiple files */}
+                        <div className="bg-gray-800/50 rounded p-3 space-y-2">
+                          {app.workSubmissionUrl.split('---').map((section, idx) => {
+                            if (idx === 0) {
+                              // Main deliverable
+                              const mainUrl = section.trim();
+                              return (
+                                <div key={idx}>
+                                  <p className="text-xs text-gray-500 mb-1">Main Deliverable:</p>
+                                  <a
+                                    href={mainUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary-400 text-sm hover:underline font-mono break-all block"
+                                  >
+                                    🔗 {mainUrl}
+                                  </a>
+                                </div>
+                              );
+                            }
+                            // Additional files section
+                            const lines = section.split('\n').filter(l => l.trim());
+                            if (lines.length === 0) return null;
+                            return (
+                              <div key={idx} className="pt-2 border-t border-gray-700">
+                                <p className="text-xs text-gray-500 mb-1">{lines[0]}</p>
+                                <div className="space-y-1">
+                                  {lines.slice(1).map((line, i) => {
+                                    const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
+                                    if (urlMatch) {
+                                      return (
+                                        <a
+                                          key={i}
+                                          href={urlMatch[1]}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="block text-xs text-primary-400 hover:text-primary-300 hover:underline font-mono break-all"
+                                        >
+                                          🔗 {urlMatch[1]}
+                                        </a>
+                                      );
+                                    }
+                                    return null;
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <button
