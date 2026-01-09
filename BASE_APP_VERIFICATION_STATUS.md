@@ -16,8 +16,9 @@
 | **URLs válidas** | ✅ | iconUrl, splashImageUrl, screenshots ✓ |
 | **Base verification tag** | ✅ | `<meta name="base:app_id">` en index.html |
 | **App deployada** | ✅ | Vercel deployment exitoso |
-| **Account Association** | ❌ | **FALTA - BLOQUEADOR** |
-| **URL compartida en Base App** | ❌ | Pendiente (requiere account association primero) |
+| **Account Association** | ✅ | **COMPLETADO** - Generado y committeado |
+| **Vercel Redeploy** | 🔄 | En progreso (~2 min) |
+| **URL compartida en Base App** | ⏳ | **PRÓXIMO PASO** |
 
 ---
 
