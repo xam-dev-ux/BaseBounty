@@ -32,15 +32,18 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
       const bountyData = await contract.getBounty(bountyId);
       const applicantAddresses = await contract.getBountyApplicants(bountyId);
 
+      // Convert status to number to ensure it matches enum
+      const status = Number(bountyData.status);
+
       setBounty({
         id: bountyData.id,
         creator: bountyData.creator,
         title: bountyData.title,
         description: bountyData.description,
-        category: bountyData.category,
+        category: Number(bountyData.category),
         payment: bountyData.payment,
         deadline: bountyData.deadline,
-        status: bountyData.status,
+        status: status,
         selectedWorker: bountyData.selectedWorker,
         createdAt: bountyData.createdAt,
       });
@@ -186,7 +189,11 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
       console.log('🔍 BountyDetail Debug:', {
         bountyId: bountyId.toString(),
         bountyStatus: bounty.status,
+        bountyStatusType: typeof bounty.status,
         bountyStatusLabel: StatusLabels[bounty.status],
+        BountyStatusActive: BountyStatus.Active,
+        isStatusActive: bounty.status === BountyStatus.Active,
+        isStatusNotActive: bounty.status !== BountyStatus.Active,
         isCreator,
         hasApplied,
         myAccount: account,
@@ -269,6 +276,20 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
         </div>
       </div>
 
+      {/* Debug Panel - Remove after testing */}
+      {!isCreator && process.env.NODE_ENV === 'development' && (
+        <div className="card bg-yellow-900/20 border border-yellow-700">
+          <p className="text-yellow-400 font-semibold mb-2">🐛 Debug Info (Development Only)</p>
+          <div className="text-xs text-yellow-300 space-y-1">
+            <p>Status: {bounty.status} ({StatusLabels[bounty.status]})</p>
+            <p>Status Type: {typeof bounty.status}</p>
+            <p>Is Active: {bounty.status === BountyStatus.Active ? 'YES' : 'NO'}</p>
+            <p>Has Applied: {hasApplied ? 'YES' : 'NO'}</p>
+            <p>Can Apply: {!isCreator && bounty.status === BountyStatus.Active && !hasApplied ? 'YES' : 'NO'}</p>
+          </div>
+        </div>
+      )}
+
       {/* Worker Actions - Apply to Bounty */}
       {!isCreator && bounty.status === BountyStatus.Active && !hasApplied && (
         <div className="card bg-primary-900/20 border-2 border-primary-600">
@@ -303,9 +324,16 @@ const BountyDetail: React.FC<BountyDetailProps> = ({ bountyId, onBack }) => {
 
       {!isCreator && bounty.status !== BountyStatus.Active && (
         <div className="card bg-gray-700/50 border border-gray-600">
-          <p className="text-gray-400">
-            This bounty is {StatusLabels[bounty.status].toLowerCase()} and no longer accepting applications.
-          </p>
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <p className="text-gray-400">
+              {bounty.status === BountyStatus.Completed && "This bounty has been completed and is no longer accepting applications."}
+              {bounty.status === BountyStatus.Cancelled && "This bounty has been cancelled and is no longer accepting applications."}
+              {bounty.status === BountyStatus.InDispute && "This bounty is in dispute and is not accepting new applications."}
+            </p>
+          </div>
         </div>
       )}
 
