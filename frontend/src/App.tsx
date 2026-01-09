@@ -49,7 +49,7 @@ function App() {
               <p className="text-sm text-gray-400">
                 Connect your wallet to start posting tasks or earning as a worker
               </p>
-              <button onClick={connectWallet} className="btn-primary w-full">
+              <button onClick={() => connectWallet(false)} className="btn-primary w-full">
                 Connect Wallet
               </button>
             </div>
